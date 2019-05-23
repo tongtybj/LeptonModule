@@ -60,3 +60,26 @@ This simple program will stream frames from the Lepton to a v4l2loopback device.
 Python
 --------------
 If you'd like to use the breakout board with Python on Linux, check out the pylepton project: https://github.com/groupgets/pylepton
+
+Jetson TX2
+--------------
+To use this board with Jetson TX2, you need to reconfigure kernel first to enable SPI.
+
+Follow, https://elinux.org/Jetson/TX2_SPI to update kernel and device tree.
+As shown [in this blog](https://me.knnect.com/blog/how-to-connect-flir-lepton-module-to-nvidia-jetson-tk1/), you need to add `spi-max-frequency = <0xF42400>;` in device tree to change SPI communication speed from default to 16MHz.
+Check [here](https://www.jetsonhacks.com/nvidia-jetson-tx2-j21-header-pinout/) for pin layout of Jetson TX2.
+
+In order to use v2l4loopback, you have to install v2l4loopback kernel module first:
+
+```
+$ sudo apt install v4l2loopback-dkms
+$ cd (repo path)/software/v4l2lepton
+$ make
+```
+In order to loopback thermal image to /dev/video\*
+
+```
+$ sudo modprobe v2l4loopback
+$ sudo ./v4l2lepton -v /dev/video1 -d /dev/spidev3.0
+```
+

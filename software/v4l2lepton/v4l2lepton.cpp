@@ -35,6 +35,8 @@ static int width = 80;                //640;    // Default for Flash
 static int height = 60;        //480;    // Default for Flash
 static char *vidsendbuf = NULL;
 static int vidsendsiz = 0;
+static int threshold = 100; // degree celsius
+static bool is_bin = false; // if output binary image
 
 static int resets = 0;
 static uint8_t result[PACKET_SIZE*PACKETS_PER_FRAME];
@@ -42,6 +44,11 @@ static uint16_t *frameBuffer;
 
 static void init_device() {
     SpiOpenPort(spidev);
+}
+
+float frameval2celsius(float frameval, float fpatemp) {
+    // based on http://takesan.hatenablog.com/entry/2016/02/18/194252
+    return ((0.05872*frameval-472.22999f+fpatemp) - 32.0f)/1.8f;
 }
 
 static void grab_frame() {
@@ -94,6 +101,12 @@ static void grab_frame() {
 
     float diff = maxValue - minValue;
     float scale = 255 / diff;
+
+    int fpatemp = lepton_fpa_temperature(); 
+    float fpatemp_f = fpatemp/100 *1.8f - 459.67f;
+    float value_min = frameval2celsius(minValue, fpatemp_f);
+    float value_max = frameval2celsius(maxValue, fpatemp_f);
+
     for (int i = 0; i < FRAME_SIZE_UINT16; i++) {
         if (i % PACKET_SIZE_UINT16 < 2) {
             continue;
@@ -103,11 +116,25 @@ static void grab_frame() {
         column = (i % PACKET_SIZE_UINT16) - 2;
         row = i / PACKET_SIZE_UINT16;
 
+        float value_temp = frameval2celsius(frameBuffer[i], fpatemp_f);
+        int bin_color;
+        if (value_temp > threshold) {
+            bin_color = 255;
+	} else {
+            bin_color = 0;
+	}
+
         // Set video buffer pixel to scaled colormap value
         int idx = row * width * 3 + column * 3;
-        vidsendbuf[idx + 0] = colormap[3 * value];
-        vidsendbuf[idx + 1] = colormap[3 * value + 1];
-        vidsendbuf[idx + 2] = colormap[3 * value + 2];
+        if (is_bin) {
+            vidsendbuf[idx + 0] = bin_color;
+            vidsendbuf[idx + 1] = bin_color;
+            vidsendbuf[idx + 2] = bin_color;
+        } else {
+            vidsendbuf[idx + 0] = colormap[3 * value];
+            vidsendbuf[idx + 1] = colormap[3 * value + 1];
+            vidsendbuf[idx + 2] = colormap[3 * value + 2];
+        }
     }
 
     /*
@@ -169,15 +196,19 @@ void usage(char *exec)
            "  -h | --help              Print this message\n"
            "  -v | --video name        Use name as v4l2loopback device "
                "(%s by default)\n"
+           "  -b | --binary            Set to output binary image\n"
+           "  -t | --threshold temp    Set temperature threshold in celsius degree\n"
            "", exec, v4l2dev);
 }
 
-static const char short_options [] = "d:hv:";
+static const char short_options [] = "d:hv:t:b";
 
 static const struct option long_options [] = {
     { "device",  required_argument, NULL, 'd' },
     { "help",    no_argument,       NULL, 'h' },
     { "video",   required_argument, NULL, 'v' },
+    { "binary",   required_argument, NULL, 'b' },
+    { "threshold",   required_argument, NULL, 't' },
     { 0, 0, 0, 0 }
 };
 
@@ -211,6 +242,14 @@ int main(int argc, char **argv)
 
             case 'v':
                 v4l2dev = optarg;
+                break;
+
+            case 'b':
+                is_bin = true;
+                break;
+
+            case 't':
+                threshold = atoi(optarg);
                 break;
 
             default:

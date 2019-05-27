@@ -22,8 +22,8 @@ SPI.o: SPI.cpp SPI.h
 Lepton_I2C.o: 
 	${CXX} -c ${CXXFLAGS} ${INCPATH} -o Lepton_I2C.o Lepton_I2C.cpp
 
-v4l2lepton: v4l2lepton.o leptsci.o Palettes.o SPI.o
-	${CXX} -o v4l2lepton leptsci.o Palettes.o SPI.o v4l2lepton.cpp ${CXXFLAGS}
+v4l2lepton: v4l2lepton.o leptsci.o Palettes.o SPI.o Lepton_I2C.o
+	${CXX} -o v4l2lepton leptsci.o Palettes.o SPI.o Lepton_I2C.o v4l2lepton.cpp ${CXXFLAGS}
 
 leptsci.o: leptsci.c
 

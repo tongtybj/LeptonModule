@@ -56,6 +56,7 @@ static void grab_frame() {
             usleep(1000);
             if (resets == 750) {
                 SpiClosePort();
+                lepton_reboot();
                 usleep(750000);
                 SpiOpenPort(spidev);
             }

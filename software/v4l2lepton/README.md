@@ -27,3 +27,8 @@ To Run v4l2lepton:
 
 If spidev device is not given /dev/spidev0.1 will be used by default.  
 You can confirm that the stream is working by using something like VLC Media Player and opening /dev/videoX as a capture device. Anything that can interface with v4l2 devices can use it though.
+
+
+NOTE:
+
+To cope with sudden death by unsyncronization, added reboot when failed to grab image by following [here](http://ylb.jp/Tech/LeptonOnRasPiZero/).

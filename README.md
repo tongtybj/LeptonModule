@@ -83,3 +83,4 @@ $ sudo modprobe v2l4loopback
 $ sudo ./v4l2lepton -v /dev/video1 -d /dev/spidev3.0
 ```
 
+If you want to load kernel module automatically on boot, add ```v4l2loopback``` in ```/etc/modules```.

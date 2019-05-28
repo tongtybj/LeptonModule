@@ -215,7 +215,7 @@ void usage(char *exec)
                "(%s by default)\n"
            "  -b | --binary            Set to output binary image\n"
            "  -g | --gray              Set to output grayscale image\n"
-           "  -r | --range             Set range for output grayscale image\n"
+           "  -r | --range             Set range for output grayscale image in celsius (eg. 15-40)\n"
            "  -t | --threshold temp    Set temperature threshold in celsius degree\n"
            "", exec, v4l2dev);
 }

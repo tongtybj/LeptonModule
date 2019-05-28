@@ -74,13 +74,13 @@ In order to use v2l4loopback, you have to install v2l4loopback kernel module fir
 ```
 $ sudo apt install v4l2loopback-dkms
 $ cd (repo path)/software/v4l2lepton
-$ make
+$ make && sudo make install
 ```
 In order to loopback thermal image to /dev/video\*
 
 ```
 $ sudo modprobe v2l4loopback
-$ sudo ./v4l2lepton -v /dev/video1 -d /dev/spidev3.0
+$ sudo v4l2lepton -v /dev/video1 -d /dev/spidev3.0
 ```
 
 If you want to load kernel module automatically on boot, add ```v4l2loopback``` in ```/etc/modules```.

@@ -37,6 +37,10 @@ static char *vidsendbuf = NULL;
 static int vidsendsiz = 0;
 static int threshold = 100; // degree celsius
 static bool is_bin = false; // if output binary image
+static bool is_gray_temp = false; // if output grayscale image relative to celsius
+static bool is_range = false; // if range is set by arg
+static int temp_min = 0; // minimum celsius temp for grayscale image
+static int temp_max = 255; // maximum celsius temp for grayscale image
 
 static int resets = 0;
 static uint8_t result[PACKET_SIZE*PACKETS_PER_FRAME];
@@ -104,32 +108,45 @@ static void grab_frame() {
 
     int fpatemp = lepton_fpa_temperature(); 
     float fpatemp_f = fpatemp/100 *1.8f - 459.67f;
-    float value_min = frameval2celsius(minValue, fpatemp_f);
-    float value_max = frameval2celsius(maxValue, fpatemp_f);
 
     for (int i = 0; i < FRAME_SIZE_UINT16; i++) {
         if (i % PACKET_SIZE_UINT16 < 2) {
             continue;
         }
         value = (frameBuffer[i] - minValue) * scale;
-        const int *colormap = colormap_ironblack;
+        const int *colormap;
+        if (is_gray_temp) {
+            colormap = colormap_grayscale;
+        } else {
+            colormap = colormap_ironblack;
+        }
         column = (i % PACKET_SIZE_UINT16) - 2;
         row = i / PACKET_SIZE_UINT16;
 
         float value_temp = frameval2celsius(frameBuffer[i], fpatemp_f);
-        int bin_color;
-        if (value_temp > threshold) {
-            bin_color = 255;
-	} else {
-            bin_color = 0;
-	}
 
         // Set video buffer pixel to scaled colormap value
         int idx = row * width * 3 + column * 3;
         if (is_bin) {
+            int bin_color;
+            if (value_temp > threshold) {
+                bin_color = 255;
+            } else {
+                bin_color = 0;
+            }
             vidsendbuf[idx + 0] = bin_color;
             vidsendbuf[idx + 1] = bin_color;
             vidsendbuf[idx + 2] = bin_color;
+        } else if (is_range) {
+            value_temp = (value_temp - temp_min) * 255/(temp_max - temp_min);
+            if (value_temp < 0) {
+              value_temp = 0;
+            } else if (value_temp>255) {
+              value_temp = 255;
+            }
+            vidsendbuf[idx + 0] = colormap[3 * (int)value_temp];
+            vidsendbuf[idx + 1] = colormap[3 * (int)value_temp + 1];
+            vidsendbuf[idx + 2] = colormap[3 * (int)value_temp + 2];
         } else {
             vidsendbuf[idx + 0] = colormap[3 * value];
             vidsendbuf[idx + 1] = colormap[3 * value + 1];
@@ -197,17 +214,21 @@ void usage(char *exec)
            "  -v | --video name        Use name as v4l2loopback device "
                "(%s by default)\n"
            "  -b | --binary            Set to output binary image\n"
+           "  -g | --gray              Set to output grayscale image\n"
+           "  -r | --range             Set range for output grayscale image\n"
            "  -t | --threshold temp    Set temperature threshold in celsius degree\n"
            "", exec, v4l2dev);
 }
 
-static const char short_options [] = "d:hv:t:b";
+static const char short_options [] = "d:hv:t:bgr:";
 
 static const struct option long_options [] = {
     { "device",  required_argument, NULL, 'd' },
     { "help",    no_argument,       NULL, 'h' },
     { "video",   required_argument, NULL, 'v' },
     { "binary",   required_argument, NULL, 'b' },
+    { "threshold",   required_argument, NULL, 't' },
+    { "gray",   required_argument, NULL, 'b' },
     { "threshold",   required_argument, NULL, 't' },
     { 0, 0, 0, 0 }
 };
@@ -248,6 +269,23 @@ int main(int argc, char **argv)
                 is_bin = true;
                 break;
 
+            case 'g':
+                is_gray_temp = true;
+                break;
+
+            case 'r': {
+                char delim[] = "-";
+                char *ptr = strtok(optarg, delim);
+                is_range = true;
+                if (ptr != NULL) { 
+                    temp_min = atoi(ptr);
+                    ptr = strtok(NULL, delim);
+                    if (ptr != NULL) {
+                      temp_max = atoi(ptr);
+                    }
+                } 
+                break;
+                      }
             case 't':
                 threshold = atoi(optarg);
                 break;

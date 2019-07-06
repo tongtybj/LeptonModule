@@ -4,7 +4,7 @@ int spi_cs_fd = -1;
 
 unsigned char spi_mode = SPI_MODE_3;
 unsigned char spi_bitsPerWord = 8;
-unsigned int spi_speed = 10000000;
+unsigned int spi_speed = 16000000;
 
 int SpiOpenPort (char* spi_device)
 {
@@ -21,7 +21,7 @@ int SpiOpenPort (char* spi_device)
 	spi_bitsPerWord = 8;
 
 	//----- SET SPI BUS SPEED -----
-	spi_speed = 10000000;				//1000000 = 1MHz (1uS per bit)
+	spi_speed = 16000000;				//1000000 = 1MHz (1uS per bit)
 
 	if (spi_device)
 		spi_cs_fd = open(std::string(spi_device).c_str(), O_RDWR);

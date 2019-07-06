@@ -74,7 +74,7 @@ static void grab_frame() {
         }
     }
     if (resets >= 30) {
-        fprintf( stderr, "done reading, resets: \n" );
+      fprintf( stderr, "done reading, reset times: %d \n", resets );
     }
 
     frameBuffer = (uint16_t *)result;

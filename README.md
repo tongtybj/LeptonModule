@@ -79,7 +79,7 @@ $ make && sudo make install
 In order to loopback thermal image to /dev/video\*
 
 ```
-$ sudo modprobe v2l4loopback
+$ sudo modprobe v4l2loopback
 $ sudo v4l2lepton -v /dev/video1 -d /dev/spidev3.0
 ```
 

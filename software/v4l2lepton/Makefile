@@ -7,7 +7,7 @@ INCPATH = -I. -I../raspberrypi_libs
 
 INATALL_PATH = /usr/local/bin
 
-all: sdk leptsci.o SPI.o Lepton_I2C.o Palettes.o v4l2lepton
+all: sdk SPI.o Lepton_I2C.o Palettes.o v4l2lepton
 
 sdk:
 	make -C ../raspberrypi_libs/leptonSDKEmb32PUB
@@ -24,10 +24,10 @@ SPI.o: SPI.cpp SPI.h
 Lepton_I2C.o: 
 	${CXX} -c ${CXXFLAGS} ${INCPATH} -o Lepton_I2C.o Lepton_I2C.cpp
 
-v4l2lepton: v4l2lepton.o leptsci.o Palettes.o SPI.o Lepton_I2C.o
-	${CXX} -o v4l2lepton leptsci.o Palettes.o SPI.o Lepton_I2C.o v4l2lepton.cpp ${CXXFLAGS}
+v4l2lepton: v4l2lepton.o Palettes.o SPI.o Lepton_I2C.o
+	${CXX} -o v4l2lepton  Palettes.o SPI.o Lepton_I2C.o v4l2lepton.cpp ${CXXFLAGS}
 
-leptsci.o: leptsci.c
+#leptsci.o: leptsci.c
 
 .PHONY: clean
 clean:
